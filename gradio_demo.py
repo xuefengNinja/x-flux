@@ -127,46 +127,23 @@ def create_demo(
                             height = gr.Slider(512, 2048, 1024, step=16, label="Height")
                         neg_prompt = gr.Textbox(label="Negative Prompt", value="bad photo")
                         with gr.Row():
-                            num_steps = gr.Slider(1, 50, 25, step=1, label="Number of steps")
+                            num_steps = gr.Slider(1, 200, 25, step=1, label="Number of steps")
                             timestep_to_start_cfg = gr.Slider(1, 50, 1, step=1, label="timestep_to_start_cfg")
                         with gr.Row():
-                            guidance = gr.Slider(1.0, 5.0, 4.0, step=0.1, label="Guidance", interactive=True)
-                            true_gs = gr.Slider(1.0, 5.0, 3.5, step=0.1, label="True Guidance", interactive=True)
+                            guidance = gr.Slider(0.0, 5.0, 4.0, step=0.1, label="Guidance", interactive=True)
+                            true_gs = gr.Slider(0.0, 5.0, 3.5, step=0.1, label="True Guidance", interactive=True)
                         seed = gr.Textbox(-1, label="Seed (-1 for random)")
 
-                    with gr.Accordion("ControlNet Options", open=False):
-                        control_type = gr.Dropdown(["canny", "hed", "depth"], label="Control type")
-                        control_weight = gr.Slider(0.0, 1.0, 0.8, step=0.1, label="Controlnet weight", interactive=True)
-                        local_path = gr.Dropdown(checkpoints, label="Controlnet Checkpoint",
-                            info="Local Path to Controlnet weights (if no, it will be downloaded from HF)"
-                            )
-                        controlnet_image = gr.Image(label="Input Controlnet Image", visible=True, interactive=True)
-
-                    with gr.Accordion("LoRA Options", open=False):
-                        lora_weight = gr.Slider(0.0, 1.0, 0.9, step=0.1, label="LoRA weight", interactive=True)
-                        lora_local_path = gr.Dropdown(
-                            checkpoints, label="LoRA Checkpoint", info="Local Path to Lora weights"
-                            )
-
-                    with gr.Accordion("IP Adapter Options", open=False):
-                        image_prompt = gr.Image(label="image_prompt", visible=True, interactive=True)
-                        ip_scale = gr.Slider(0.0, 1.0, 1.0, step=0.1, label="ip_scale")
-                        neg_image_prompt = gr.Image(label="neg_image_prompt", visible=True, interactive=True)
-                        neg_ip_scale = gr.Slider(0.0, 1.0, 1.0, step=0.1, label="neg_ip_scale")
-                        ip_local_path = gr.Dropdown(
-                            checkpoints, label="IP Adapter Checkpoint",
-                            info="Local Path to IP Adapter weights (if no, it will be downloaded from HF)"
-                            )
                     generate_btn = gr.Button("Generate")
 
                 with gr.Column():
                     output_image = gr.Image(label="Generated Image")
                     download_btn = gr.File(label="Download full-resolution")
 
-            inputs = [prompt, image_prompt, controlnet_image, width, height, guidance,
-                    num_steps, seed, true_gs, ip_scale, neg_ip_scale, neg_prompt,
-                    neg_image_prompt, timestep_to_start_cfg, control_type, control_weight,
-                    lora_weight, local_path, lora_local_path, ip_local_path
+            inputs = [prompt,  width, height, guidance,
+                    num_steps, seed, true_gs,  neg_prompt,
+                    timestep_to_start_cfg, 
+                    
                     ]
             generate_btn.click(
                 fn=xflux_pipeline.gradio_generate,
@@ -174,23 +151,6 @@ def create_demo(
                 outputs=[output_image, download_btn],
             )
 
-        with gr.Tab("LoRA Finetuning"):
-            data_dir =  gr.Dropdown(list_train_data_dirs(),
-                                    label="Training images (directory containing the training images)"
-                                    )
-            output_dir = gr.Textbox(label="Output Path", value="lora_checkpoint")
-
-            with gr.Accordion("Training Options", open=True):
-                lr = gr.Textbox(label="Learning Rate", value="1e-5")
-                steps = gr.Slider(10000, 20000, 20000, step=100, label="Train Steps")
-                rank = gr.Slider(1, 100, 16, step=1, label="LoRa Rank")
-
-            training_btn = gr.Button("Start training")
-            training_btn.click(
-                fn=start_lora_training,
-                inputs=[data_dir, output_dir, lr, steps, rank],
-                outputs=[],
-            )
 
 
     return demo
